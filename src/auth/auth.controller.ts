@@ -2,6 +2,8 @@ import { Controller, Post, Body, Get, Query, UseGuards, Request, Patch } from '@
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
@@ -46,5 +48,13 @@ export class AuthController {
     @Get('me')
     async getProfile(@Request() req) {
         return this.authService.getProfile(req.user.userId);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @Get('test-admin')
+    testAdmin() {
+        return { message: 'Eres administrador' };
     }
 }

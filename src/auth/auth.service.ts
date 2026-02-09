@@ -23,6 +23,16 @@ export class AuthService {
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
         const verificationToken = uuidv4();
 
+        // Assign 'user' role by default logic would be inside usersService.create theoretically,
+        // or we can explicitly fetch it if we want strict control.
+        // simpler: usersService.create will save the user. 
+        // If we want default role, we need to assign it.
+        // Let's assume UsersService handles basic user creation. 
+        // Ideally we should assign the default Role here or in the Service.
+        // Let's create the user without roles first, then adding roles would require a relation update.
+        // But since we want to keep it simple, let's rely on role seeding happening and us fetching it.
+        // However, to avoid complexity in this file, let's update UsersService to handle default role.
+
         const user = await this.usersService.create({
             email: registerDto.email,
             password: hashedPassword,
@@ -49,7 +59,12 @@ export class AuthService {
             throw new UnauthorizedException('Por favor verifica tu correo electrónico');
         }
 
-        const payload = { email: user.email, sub: user.id };
+        const payload = {
+            email: user.email,
+            sub: user.id,
+            roles: user.roles ? user.roles.map(r => r.name) : []
+        };
+
         return {
             user,
             access_token: this.jwtService.sign(payload),
