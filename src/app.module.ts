@@ -23,7 +23,7 @@ import { RolesModule } from './roles/roles.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Only for development!
+        synchronize: process.env.NODE_ENV !== 'production', // Disable in production
       }),
       inject: [ConfigService],
     }),
