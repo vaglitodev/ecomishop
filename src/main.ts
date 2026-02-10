@@ -12,6 +12,7 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true,
   }));
+  app.setGlobalPrefix('api');
 
   // Global Serializer (to handle @Exclude() in entities)
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
