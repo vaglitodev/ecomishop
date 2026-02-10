@@ -123,7 +123,7 @@ export class AuthService {
         return { message: 'Contraseña restablecida exitosamente.' };
     }
 
-    async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
+    async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
         const user = await this.usersService.findOneById(userId);
         if (!user) {
             throw new NotFoundException('Usuario no encontrado');
@@ -140,7 +140,7 @@ export class AuthService {
         return { message: 'Contraseña actualizada exitosamente.' };
     }
 
-    async getProfile(userId: number) {
+    async getProfile(userId: string) {
         const user = await this.usersService.findOneById(userId);
         if (!user) {
             throw new NotFoundException('Usuario no encontrado');

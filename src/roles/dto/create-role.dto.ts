@@ -9,9 +9,9 @@ export class CreateRoleDto {
 }
 
 export class AssignRoleDto {
-    @ApiProperty({ example: 1 })
+    @ApiProperty({ example: 'uuid-string' })
     @IsNotEmpty()
-    userId: number;
+    userId: string;
 
     @ApiProperty({ example: 'admin' })
     @IsString()

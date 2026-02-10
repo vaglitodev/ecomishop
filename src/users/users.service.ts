@@ -13,7 +13,7 @@ export class UsersService {
         private rolesRepository: Repository<Role>,
     ) { }
 
-    async findOneById(id: number): Promise<User | null> {
+    async findOneById(id: string): Promise<User | null> {
         return this.usersRepository.findOne({ where: { id }, relations: ['roles'] });
     }
 
@@ -37,7 +37,7 @@ export class UsersService {
         if (defaultRole) {
             user.roles = [defaultRole];
         } else {
-            // Fallback: try to find 'user' or just proceed without roles if not found (though seeding should prevent this)
+            // Fallback: try to find 'user' or just proceed without roles if not found
             const fallbackRole = await this.rolesRepository.findOne({ where: { name: 'user' } });
             if (fallbackRole) user.roles = [fallbackRole];
         }
@@ -45,11 +45,11 @@ export class UsersService {
         return this.usersRepository.save(user);
     }
 
-    async update(id: number, updateData: Partial<User>): Promise<void> {
+    async update(id: string, updateData: Partial<User>): Promise<void> {
         await this.usersRepository.update(id, updateData);
     }
 
-    async addRole(userId: number, roleName: string): Promise<User> {
+    async addRole(userId: string, roleName: string): Promise<User> {
         const user = await this.findOneById(userId);
         if (!user) {
             throw new Error('Usuario no encontrado');
