@@ -32,10 +32,14 @@ export class UsersService {
     async create(userData: Partial<User>): Promise<User> {
         const user = this.usersRepository.create(userData);
 
-        // Assign default role 'user'
-        const defaultRole = await this.rolesRepository.findOne({ where: { name: 'user' } });
+        // Assign default role 'customer'
+        const defaultRole = await this.rolesRepository.findOne({ where: { name: 'customer' } });
         if (defaultRole) {
             user.roles = [defaultRole];
+        } else {
+            // Fallback: try to find 'user' or just proceed without roles if not found (though seeding should prevent this)
+            const fallbackRole = await this.rolesRepository.findOne({ where: { name: 'user' } });
+            if (fallbackRole) user.roles = [fallbackRole];
         }
 
         return this.usersRepository.save(user);
@@ -43,5 +47,23 @@ export class UsersService {
 
     async update(id: number, updateData: Partial<User>): Promise<void> {
         await this.usersRepository.update(id, updateData);
+    }
+
+    async addRole(userId: number, roleName: string): Promise<User> {
+        const user = await this.findOneById(userId);
+        if (!user) {
+            throw new Error('Usuario no encontrado');
+        }
+        const role = await this.rolesRepository.findOne({ where: { name: roleName } });
+        if (!role) {
+            throw new Error('Rol no encontrado');
+        }
+
+        // Check if user already has role
+        if (!user.roles.some(r => r.name === roleName)) {
+            user.roles.push(role);
+            return this.usersRepository.save(user);
+        }
+        return user;
     }
 }
