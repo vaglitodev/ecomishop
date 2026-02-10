@@ -15,7 +15,7 @@ export class RolesService implements OnModuleInit {
     }
 
     async seedRoles() {
-        const defaultRoles = ['user', 'admin'];
+        const defaultRoles = ['admin', 'staff', 'customer'];
         for (const roleName of defaultRoles) {
             const existingRole = await this.roleRepository.findOne({ where: { name: roleName } });
             if (!existingRole) {
@@ -31,5 +31,14 @@ export class RolesService implements OnModuleInit {
 
     async findAll(): Promise<Role[]> {
         return this.roleRepository.find();
+    }
+
+    async create(name: string): Promise<Role> {
+        const existingRole = await this.roleRepository.findOne({ where: { name } });
+        if (existingRole) {
+            throw new Error('El rol ya existe');
+        }
+        const role = this.roleRepository.create({ name });
+        return this.roleRepository.save(role);
     }
 }
