@@ -11,6 +11,9 @@ export class InitialMigration1770762960689 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_b2f0366aa9349789527e0c36d9" ON "users_roles_roles" ("rolesId") `);
         await queryRunner.query(`ALTER TABLE "users_roles_roles" ADD CONSTRAINT "FK_df951a64f09865171d2d7a502b1" FOREIGN KEY ("usersId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
         await queryRunner.query(`ALTER TABLE "users_roles_roles" ADD CONSTRAINT "FK_b2f0366aa9349789527e0c36d97" FOREIGN KEY ("rolesId") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+
+        // Seed default roles
+        await queryRunner.query(`INSERT INTO "roles" ("name") VALUES ('customer'), ('admin'), ('staff')`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
