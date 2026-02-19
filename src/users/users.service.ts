@@ -66,4 +66,12 @@ export class UsersService {
         }
         return user;
     }
+
+    async findAll(): Promise<User[]> {
+        return this.usersRepository.find({ relations: ['roles'] });
+    }
+
+    async remove(id: string): Promise<void> {
+        await this.usersRepository.softDelete(id);
+    }
 }
