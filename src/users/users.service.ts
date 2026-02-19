@@ -74,4 +74,14 @@ export class UsersService {
     async remove(id: string): Promise<void> {
         await this.usersRepository.softDelete(id);
     }
+
+    async removeRole(userId: string, roleName: string): Promise<User> {
+        const user = await this.findOneById(userId);
+        if (!user) {
+            throw new Error('Usuario no encontrado');
+        }
+        
+        user.roles = user.roles.filter(role => role.name !== roleName);
+        return this.usersRepository.save(user);
+    }
 }

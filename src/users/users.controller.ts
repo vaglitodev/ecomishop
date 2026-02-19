@@ -27,4 +27,9 @@ export class UsersController {
   assignRole(@Param('id') id: string, @Body('roleName') roleName: string) {
     return this.usersService.addRole(id, roleName);
   }
+
+  @Delete(':id/role/:roleName')
+  removeRole(@Param('id') id: string, @Param('roleName') roleName: string) {
+    return this.usersService.removeRole(id, roleName);
+  }
 }
