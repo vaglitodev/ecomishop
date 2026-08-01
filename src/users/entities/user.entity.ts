@@ -1,44 +1,57 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, DeleteDateColumn } from 'typeorm';
-import { Exclude } from 'class-transformer';
-import { Role } from '../../roles/entities/role.entity';
+import { Exclude } from "class-transformer";
+import {
+	Column,
+	CreateDateColumn,
+	DeleteDateColumn,
+	Entity,
+	JoinTable,
+	ManyToMany,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn,
+} from "typeorm";
+import { Role } from "../../roles/entities/role.entity";
 
-@Entity('users')
+@Entity("users")
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+	@PrimaryGeneratedColumn("uuid")
+	id: string;
 
-    @Column({ unique: true })
-    email: string;
+	@Column({ unique: true })
+	email: string;
 
-    @Column()
-    @Exclude()
-    password: string;
+	@Column()
+	@Exclude()
+	password: string;
 
-    @Column({ default: false })
-    isVerified: boolean;
+	@Column({ default: false })
+	isVerified: boolean;
 
-    @Column({ type: 'varchar', nullable: true })
-    @Exclude()
-    verificationToken: string | null;
+	@Column({ type: "varchar", nullable: true })
+	@Exclude()
+	verificationToken: string | null;
 
-    @Column({ type: 'varchar', nullable: true })
-    @Exclude()
-    resetPasswordToken: string | null;
+	@Column({ type: "varchar", nullable: true })
+	@Exclude()
+	resetPasswordToken: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
-    @Exclude()
-    resetPasswordExpires: Date | null;
+	@Column({ type: "timestamp", nullable: true })
+	@Exclude()
+	resetPasswordExpires: Date | null;
 
-    @ManyToMany(() => Role, (role) => role.users, { cascade: true, eager: true })
-    @JoinTable()
-    roles: Role[];
+	@ManyToMany(
+		() => Role,
+		(role) => role.users,
+		{ cascade: true, eager: true },
+	)
+	@JoinTable()
+	roles: Role[];
 
-    @CreateDateColumn()
-    createdAt: Date;
+	@CreateDateColumn()
+	createdAt: Date;
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+	@UpdateDateColumn()
+	updatedAt: Date;
 
-    @DeleteDateColumn()
-    deletedAt: Date;
+	@DeleteDateColumn()
+	deletedAt: Date;
 }
