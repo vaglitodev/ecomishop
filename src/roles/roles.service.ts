@@ -1,44 +1,46 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
-    constructor(
-        @InjectRepository(Role)
-        private roleRepository: Repository<Role>,
-    ) { }
+  constructor(
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+  ) {}
 
-    async onModuleInit() {
-        await this.seedRoles();
-    }
+  async onModuleInit() {
+    await this.seedRoles();
+  }
 
-    async seedRoles() {
-        const defaultRoles = ['admin', 'staff', 'customer'];
-        for (const roleName of defaultRoles) {
-            const existingRole = await this.roleRepository.findOne({ where: { name: roleName } });
-            if (!existingRole) {
-                await this.roleRepository.save({ name: roleName });
-                console.log(`Role ${roleName} created.`);
-            }
-        }
+  async seedRoles() {
+    const defaultRoles = ['admin', 'staff', 'customer'];
+    for (const roleName of defaultRoles) {
+      const existingRole = await this.roleRepository.findOne({
+        where: { name: roleName },
+      });
+      if (!existingRole) {
+        await this.roleRepository.save({ name: roleName });
+        console.log(`Role ${roleName} created.`);
+      }
     }
+  }
 
-    async findByName(name: string): Promise<Role | null> {
-        return this.roleRepository.findOne({ where: { name } });
-    }
+  async findByName(name: string): Promise<Role | null> {
+    return this.roleRepository.findOne({ where: { name } });
+  }
 
-    async findAll(): Promise<Role[]> {
-        return this.roleRepository.find();
-    }
+  async findAll(): Promise<Role[]> {
+    return this.roleRepository.find();
+  }
 
-    async create(name: string): Promise<Role> {
-        const existingRole = await this.roleRepository.findOne({ where: { name } });
-        if (existingRole) {
-            throw new Error('El rol ya existe');
-        }
-        const role = this.roleRepository.create({ name });
-        return this.roleRepository.save(role);
+  async create(name: string): Promise<Role> {
+    const existingRole = await this.roleRepository.findOne({ where: { name } });
+    if (existingRole) {
+      throw new Error('El rol ya existe');
     }
+    const role = this.roleRepository.create({ name });
+    return this.roleRepository.save(role);
+  }
 }
