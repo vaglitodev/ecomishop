@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
@@ -68,13 +68,13 @@ export class UsersService {
   async addRole(userId: string, roleName: string): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
-      throw new Error('Usuario no encontrado');
+      throw new NotFoundException('Usuario no encontrado');
     }
     const role = await this.rolesRepository.findOne({
       where: { name: roleName },
     });
     if (!role) {
-      throw new Error('Rol no encontrado');
+      throw new NotFoundException('Rol no encontrado');
     }
 
     // Check if user already has role
@@ -96,7 +96,7 @@ export class UsersService {
   async removeRole(userId: string, roleName: string): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
-      throw new Error('Usuario no encontrado');
+      throw new NotFoundException('Usuario no encontrado');
     }
 
     user.roles = user.roles.filter((role) => role.name !== roleName);
