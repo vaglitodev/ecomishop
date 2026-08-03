@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
 export class RegisterDto {
 	@ApiProperty({ example: "user@example.com" })
@@ -7,10 +7,13 @@ export class RegisterDto {
 	@IsNotEmpty()
 	email: string;
 
-	@ApiProperty({ example: "password123", minLength: 6 })
+	@ApiProperty({ example: "Password1!", minLength: 8 })
 	@IsString()
 	@IsNotEmpty()
-	@MinLength(6)
+	@MinLength(8)
+	@Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+		message: "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+	})
 	password: string;
 }
 
@@ -39,10 +42,13 @@ export class ResetPasswordDto {
 	@IsNotEmpty()
 	token: string;
 
-	@ApiProperty({ minLength: 6 })
+	@ApiProperty({ minLength: 8 })
 	@IsString()
 	@IsNotEmpty()
-	@MinLength(6)
+	@MinLength(8)
+	@Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+		message: "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+	})
 	password: string;
 }
 
@@ -52,9 +58,12 @@ export class ChangePasswordDto {
 	@IsNotEmpty()
 	oldPassword: string;
 
-	@ApiProperty({ minLength: 6 })
+	@ApiProperty({ minLength: 8 })
 	@IsString()
 	@IsNotEmpty()
-	@MinLength(6)
+	@MinLength(8)
+	@Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+		message: "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+	})
 	newPassword: string;
 }
