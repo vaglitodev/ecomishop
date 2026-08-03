@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -41,7 +43,12 @@ export class UsersService {
     });
   }
 
-  async create(userData: Partial<User>): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // Force isVerified to false regardless of input — security hardening
+    const userData = {
+      ...createUserDto,
+      isVerified: false,
+    };
     const user = this.usersRepository.create(userData);
 
     // Assign default role 'customer'
@@ -61,8 +68,8 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async update(id: string, updateData: Partial<User>): Promise<void> {
-    await this.usersRepository.update(id, updateData);
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<void> {
+    await this.usersRepository.update(id, updateUserDto);
   }
 
   async addRole(userId: string, roleName: string): Promise<User> {
