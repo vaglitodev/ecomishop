@@ -80,6 +80,7 @@ export class UsersService {
     // Check if user already has role
     if (!user.roles.some((r) => r.name === roleName)) {
       user.roles.push(role);
+      user.tokenVersion += 1;
       return this.usersRepository.save(user);
     }
     return user;
@@ -100,6 +101,7 @@ export class UsersService {
     }
 
     user.roles = user.roles.filter((role) => role.name !== roleName);
+    user.tokenVersion += 1;
     return this.usersRepository.save(user);
   }
 }
