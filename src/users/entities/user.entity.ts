@@ -38,6 +38,9 @@ export class User {
 	@Exclude()
 	resetPasswordExpires: Date | null;
 
+	@Column({ type: "int", default: 0 })
+	tokenVersion: number;
+
 	@ManyToMany(
 		() => Role,
 		(role) => role.users,
