@@ -15,6 +15,7 @@ import type {
   ChangePasswordDto,
   ForgotPasswordDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
@@ -74,5 +75,17 @@ export class AuthController {
   @Get('test-admin')
   testAdmin() {
     return { message: 'Eres administrador' };
+  }
+
+  @Post('refresh')
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refresh(refreshTokenDto.refreshToken);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Request() req) {
+    return this.authService.logout(req.user.userId);
   }
 }

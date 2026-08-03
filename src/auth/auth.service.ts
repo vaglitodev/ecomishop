@@ -4,8 +4,10 @@ import {
 	NotFoundException,
 	UnauthorizedException,
 } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
 import type { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
+import { Repository } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import type { MailerService } from "../mailer/mailer.service";
 import type { UsersService } from "../users/users.service";
@@ -16,6 +18,9 @@ import type {
 	RegisterDto,
 	ResetPasswordDto,
 } from "./dto/auth.dto";
+import { RefreshToken } from "./entities/refresh-token.entity";
+
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class AuthService {
@@ -23,6 +28,8 @@ export class AuthService {
 		private usersService: UsersService,
 		private jwtService: JwtService,
 		private mailerService: MailerService,
+		@InjectRepository(RefreshToken)
+		private refreshTokenRepository: Repository<RefreshToken>,
 	) {}
 
 	async register(registerDto: RegisterDto) {
@@ -35,16 +42,6 @@ export class AuthService {
 
 		const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 		const verificationToken = uuidv4();
-
-		// Assign 'user' role by default logic would be inside usersService.create theoretically,
-		// or we can explicitly fetch it if we want strict control.
-		// simpler: usersService.create will save the user.
-		// If we want default role, we need to assign it.
-		// Let's assume UsersService handles basic user creation.
-		// Ideally we should assign the default Role here or in the Service.
-		// Let's create the user without roles first, then adding roles would require a relation update.
-		// But since we want to keep it simple, let's rely on role seeding happening and us fetching it.
-		// However, to avoid complexity in this file, let's update UsersService to handle default role.
 
 		const user = await this.usersService.create({
 			email: registerDto.email,
@@ -85,10 +82,82 @@ export class AuthService {
 			roles: user.roles ? user.roles.map((r) => r.name) : [],
 		};
 
+		// Generate refresh token (opaque UUID, store bcrypt hash)
+		const refreshTokenValue = uuidv4();
+		const refreshTokenHash = await bcrypt.hash(refreshTokenValue, 10);
+
+		await this.refreshTokenRepository.save({
+			token: refreshTokenHash,
+			userId: user.id,
+			expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+		});
+
 		return {
 			user,
 			access_token: this.jwtService.sign(payload),
+			refresh_token: refreshTokenValue,
 		};
+	}
+
+	async refresh(refreshTokenValue: string) {
+		// Fetch all non-revoked tokens and validate via bcrypt comparison
+		const activeTokens = await this.refreshTokenRepository.find({
+			where: { revoked: false },
+		});
+
+		let matchedToken: RefreshToken | null = null;
+		for (const token of activeTokens) {
+			if (token.expiresAt < new Date()) continue;
+			const isMatch = await bcrypt.compare(refreshTokenValue, token.token);
+			if (isMatch) {
+				matchedToken = token;
+				break;
+			}
+		}
+
+		if (!matchedToken) {
+			throw new UnauthorizedException("Invalid or expired refresh token");
+		}
+
+		// Revoke old token (rotation — one-time use)
+		await this.refreshTokenRepository.update(matchedToken.id, {
+			revoked: true,
+		});
+
+		// Re-fetch user for fresh roles in new access token
+		const user = await this.usersService.findOneById(matchedToken.userId);
+		if (!user) {
+			throw new UnauthorizedException("User not found");
+		}
+
+		const accessPayload = {
+			email: user.email,
+			sub: user.id,
+			roles: user.roles ? user.roles.map((r) => r.name) : [],
+		};
+
+		// Issue new refresh token (rotation)
+		const newRefreshTokenValue = uuidv4();
+		const newRefreshTokenHash = await bcrypt.hash(newRefreshTokenValue, 10);
+
+		await this.refreshTokenRepository.save({
+			token: newRefreshTokenHash,
+			userId: user.id,
+			expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+		});
+
+		return {
+			access_token: this.jwtService.sign(accessPayload),
+			refresh_token: newRefreshTokenValue,
+		};
+	}
+
+	async logout(userId: string) {
+		await this.refreshTokenRepository.update(
+			{ userId, revoked: false },
+			{ revoked: true },
+		);
+		return { message: "Logged out successfully" };
 	}
 
 	async verifyEmail(token: string) {
