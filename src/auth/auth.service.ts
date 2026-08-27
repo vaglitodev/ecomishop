@@ -191,7 +191,7 @@ export class AuthService {
 
 		await this.usersService.update(user.id, {
 			resetPasswordToken: resetToken,
-			resetPasswordExpires: expires,
+			resetPasswordExpires: expires.toISOString(),
 		});
 
 		await this.mailerService.sendPasswordResetEmail(user.email, resetToken);
