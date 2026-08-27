@@ -1,6 +1,7 @@
 import {
 	BadRequestException,
 	Injectable,
+	Logger,
 	NotFoundException,
 	UnauthorizedException,
 } from "@nestjs/common";
@@ -24,6 +25,8 @@ const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class AuthService {
+	private readonly logger = new Logger(AuthService.name);
+
 	constructor(
 		private usersService: UsersService,
 		private jwtService: JwtService,
@@ -49,10 +52,21 @@ export class AuthService {
 			verificationToken,
 		});
 
-		await this.mailerService.sendVerificationEmail(
-			user.email,
-			verificationToken,
-		);
+		try {
+			await this.mailerService.sendVerificationEmail(
+				user.email,
+				verificationToken,
+			);
+		} catch (error) {
+			this.logger.error(
+				`Failed to send verification email to ${user.email}`,
+				error instanceof Error ? error.message : error,
+			);
+			await this.usersService.remove(user.id);
+			throw new BadRequestException(
+				"No se pudo enviar el correo de verificación. Intenta de nuevo.",
+			);
+		}
 
 		return {
 			message: "Registro exitoso. Revisa tu correo para verificar tu cuenta.",
@@ -172,6 +186,38 @@ export class AuthService {
 		});
 
 		return { message: "Correo verificado exitosamente." };
+	}
+
+	async resendVerification(email: string) {
+		const user = await this.usersService.findOneByEmail(email);
+		if (!user) {
+			throw new BadRequestException("Usuario no encontrado");
+		}
+		if (user.isVerified) {
+			return { message: "El correo ya fue verificado." };
+		}
+
+		const verificationToken = uuidv4();
+		await this.usersService.update(user.id, {
+			verificationToken,
+		});
+
+		try {
+			await this.mailerService.sendVerificationEmail(
+				user.email,
+				verificationToken,
+			);
+		} catch (error) {
+			this.logger.error(
+				`Failed to resend verification email to ${user.email}`,
+				error instanceof Error ? error.message : error,
+			);
+			throw new BadRequestException(
+				"No se pudo enviar el correo de verificación. Intenta de nuevo.",
+			);
+		}
+
+		return { message: "Correo de verificación reenviado." };
 	}
 
 	async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
