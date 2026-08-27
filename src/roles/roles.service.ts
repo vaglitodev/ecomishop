@@ -1,10 +1,12 @@
-import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
+  private readonly logger = new Logger(RolesService.name);
+
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
@@ -22,7 +24,7 @@ export class RolesService implements OnModuleInit {
       });
       if (!existingRole) {
         await this.roleRepository.save({ name: roleName });
-        console.log(`Role ${roleName} created.`);
+        this.logger.log(`Role ${roleName} created.`);
       }
     }
   }
@@ -38,7 +40,7 @@ export class RolesService implements OnModuleInit {
   async create(name: string): Promise<Role> {
     const existingRole = await this.roleRepository.findOne({ where: { name } });
     if (existingRole) {
-      throw new Error('El rol ya existe');
+      throw new BadRequestException('El rol ya existe');
     }
     const role = this.roleRepository.create({ name });
     return this.roleRepository.save(role);
