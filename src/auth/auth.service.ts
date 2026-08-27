@@ -253,6 +253,13 @@ export class AuthService {
 		if (!user) {
 			throw new NotFoundException("Usuario no encontrado");
 		}
-		return user;
+		return {
+			id: user.id,
+			email: user.email,
+			isVerified: user.isVerified,
+			roles: user.roles.map((r) => r.name),
+			createdAt: user.createdAt,
+			updatedAt: user.updatedAt,
+		};
 	}
 }
